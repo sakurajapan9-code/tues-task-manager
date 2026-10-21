@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TUES Office — Project Task Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{--bg:#F7F5F2;--surface:#FFFFFF;--border:#E5E2DC;--text:#1A1916;--muted:#7A776F;--light:#B0ADA6;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#F0EFFE 0%,#E8F8F2 100%);}
+.login-box{background:#fff;border-radius:20px;padding:40px 36px;width:min(380px,92vw);box-shadow:0 8px 40px rgba(0,0,0,.12);text-align:center;}
+.login-logo{width:56px;height:56px;background:linear-gradient(135deg,#7F77DD,#378ADD);border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;margin:0 auto 16px;}
+.login-title{font-size:20px;font-weight:600;margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+.login-btns{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.login-btn{padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.login-btn.manager{background:#7F77DD;color:#fff;}
+.login-btn.manager:hover{background:#534AB7;}
+.login-btn.staff{background:#E8F8F2;color:#085041;border:1px solid #1D9E75;}
+.login-btn.staff:hover{background:#d0f0e4;}
+.pin-form{display:none;flex-direction:column;gap:10px;}
+.pin-form.show{display:flex;}
+.pin-input{border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-size:16px;text-align:center;letter-spacing:6px;font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);width:100%;}
+.pin-input:focus{outline:none;border-color:#7F77DD;}
+.pin-submit{padding:11px;border-radius:8px;border:none;background:#7F77DD;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.pin-submit:hover{background:#534AB7;}
+.pin-back{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:underline;}
+.pin-error{color:#A32D2D;font-size:13px;display:none;}
+.pin-error.show{display:block;}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.05);}
+.logo{font-size:17px;font-weight:600;color:var(--text);flex:1;display:flex;align-items:center;gap:10px;}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,#7F77DD,#378ADD);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;flex-shrink:0;box-shadow:0 2px 8px rgba(127,119,221,.35);}
+.logo span{color:#7F77DD;}
+.role-badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;}
+.role-manager{background:#F0EFFE;color:#3C3489;}
+.role-staff{background:#E8F8F2;color:#085041;}
+.logout-btn{background:none;border:1px solid var(--border);border-radius:99px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;}
+.logout-btn:hover{border-color:#A32D2D;color:#A32D2D;}
+.sync-indicator{font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:99px;background:var(--bg);}
+.tabs{display:flex;gap:4px;background:var(--bg);border-radius:99px;padding:4px;}
+.tab{padding:7px 18px;border-radius:99px;border:none;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s;font-family:'DM Sans',sans-serif;}
+.tab.active{color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.t-daily.active{background:#1D9E75;}.t-monthly.active{background:#378ADD;}.t-annual.active{background:#D4860B;}.t-all.active{background:#7F77DD;}
+
+.main{max-width:980px;margin:0 auto;padding:24px 20px;}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px;}
+.stat{border-radius:10px;padding:12px 14px;}
+.stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+.stat-val{font-size:26px;font-weight:600;font-family:'DM Mono',monospace;}
+.s-purple{background:#F0EFFE;}.s-purple .stat-label{color:#534AB7;}.s-purple .stat-val{color:#3C3489;}
+.s-teal{background:#E8F8F2;}.s-teal .stat-label{color:#0F6E56;}.s-teal .stat-val{color:#085041;}
+.s-blue{background:#EEF5FD;}.s-blue .stat-label{color:#185FA5;}.s-blue .stat-val{color:#0C447C;}
+.s-red{background:#FFF0F0;}.s-red .stat-label{color:#A32D2D;}.s-red .stat-val{color:#791F1F;}
+.s-amber{background:#FEF4E4;}.s-amber .stat-label{color:#854F0B;}.s-amber .stat-val{color:#633806;}
+
+.proj-progress-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-bottom:20px;}
+.proj-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 14px;border-top:3px solid #ccc;}
+.pc-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.pc-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;flex-shrink:0;}
+.pc-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;}
+.pc-short{font-size:11px;color:var(--muted);}
+.pc-counts{display:flex;justify-content:space-between;margin-bottom:8px;}
+.pc-count{text-align:center;}
+.pc-count-val{font-size:18px;font-weight:600;font-family:'DM Mono',monospace;}
+.pc-count-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.pc-bar-wrap{height:6px;background:var(--border);border-radius:99px;overflow:hidden;}
+.pc-bar{height:100%;border-radius:99px;transition:width .4s ease;}
+.pc-pct{font-size:11px;font-weight:600;text-align:right;margin-top:4px;}
+
+.reminder{background:#FEF4E4;border:1px solid #FAC775;border-radius:10px;padding:12px 16px;margin-bottom:16px;}
+.rem-title{font-size:13px;font-weight:600;color:#633806;margin-bottom:6px;}
+.rem-item{font-size:13px;color:#854F0B;padding:3px 0;display:flex;align-items:center;gap:6px;}
+.rem-item::before{content:'⚠';font-size:11px;}
+
+.add-form{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
+.add-form-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.add-form-title-icon{width:28px;height:28px;background:linear-gradient(135deg,#1D9E75,#378ADD);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;flex-shrink:0;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.form-row{display:flex;gap:8px;flex-wrap:wrap;}
+.form-input{border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;width:100%;transition:border-color .15s;}
+.form-input:focus{outline:none;border-color:#7F77DD;}
+.form-row .form-input{flex:1;min-width:110px;}
+.add-btn{padding:9px 22px;border-radius:99px;border:none;background:#7F77DD;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s;white-space:nowrap;}
+.add-btn:hover{background:#534AB7;}
+.manage-btn{padding:9px 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;}
+.manage-btn:hover{border-color:#7F77DD;color:#7F77DD;}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:16px;padding:24px;width:min(480px,92vw);max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.18);}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.modal-close{background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);padding:2px 6px;border-radius:6px;}
+.modal-section{margin-bottom:18px;}
+.modal-section-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px;}
+.modal-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.modal-list-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);}
+.modal-list-item-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+.modal-list-item-name{flex:1;font-size:13px;font-weight:500;}
+.modal-list-item-del{background:none;border:none;cursor:pointer;color:var(--light);font-size:14px;padding:2px 5px;border-radius:5px;}
+.modal-list-item-del:hover{background:#FFF0F0;color:#A32D2D;}
+.modal-add-row{display:flex;gap:8px;}
+.modal-add-row input,.modal-add-row select{flex:1;border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:13px;background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;}
+.mini-add-btn{padding:8px 14px;border-radius:8px;border:none;background:#7F77DD;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.color-picker{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.color-swatch{width:22px;height:22px;border-radius:6px;cursor:pointer;border:2px solid transparent;}
+.color-swatch.selected{border-color:var(--text);}
+.visibility-toggle{display:flex;gap:6px;margin-bottom:8px;}
+.vis-btn{padding:5px 12px;border-radius:99px;border:1px solid var(--border);font-size:12px;font-weight:500;cursor:pointer;background:transparent;font-family:'DM Sans',sans-serif;}
+.vis-btn.active-shared{background:#E8F8F2;color:#085041;border-color:#1D9E75;}
+.vis-btn.active-private{background:#FFF0F0;color:#A32D2D;border-color:#E24B4A;}
+
+.filter-section{margin-bottom:14px;}
+.filter-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--light);margin-bottom:6px;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{padding:5px 13px;border-radius:99px;border:1px solid var(--border);font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--muted);transition:all .15s;font-family:'DM Sans',sans-serif;}
+
+.task-list{display:flex;flex-direction:column;gap:6px;}
+.task-card{background:var(--surface);border-radius:10px;border-left:4px solid #ccc;padding:11px 14px;border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border);transition:box-shadow .15s;}
+.task-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.07);}
+.task-card.done{opacity:.4;}
+.task-main{display:flex;align-items:center;gap:12px;}
+.task-card input[type=checkbox]{width:17px;height:17px;flex-shrink:0;cursor:pointer;accent-color:#1D9E75;}
+.task-info{flex:1;min-width:0;}
+.task-title{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.task-card.done .task-title{text-decoration:line-through;color:var(--light);}
+.task-meta{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;align-items:center;}
+.badge{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;}
+.b-daily{background:#E8F8F2;color:#085041;}.b-monthly{background:#EEF5FD;color:#0C447C;}.b-annual{background:#FEF4E4;color:#633806;}.b-person{background:#F0EFFE;color:#3C3489;}.b-time{background:#FFF0F0;color:#A32D2D;font-weight:700;}
+.due-ok{font-size:11px;color:var(--light);}.due-soon{font-size:11px;color:#854F0B;font-weight:600;}.due-over{font-size:11px;color:#A32D2D;font-weight:600;}
+.task-btns{display:flex;gap:2px;flex-shrink:0;}
+.icon-btn{background:none;border:none;cursor:pointer;color:var(--light);font-size:15px;padding:4px 6px;border-radius:6px;transition:all .15s;}
+.icon-btn:hover{background:var(--bg);color:var(--text);}
+.icon-btn.del:hover{background:#FFF0F0;color:#A32D2D;}
+
+.edit-panel{display:none;border-top:1px solid var(--border);margin-top:10px;padding-top:10px;}
+.edit-panel.open{display:block;}
+.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px;}
+.edit-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:7px;}
+.edit-input{border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-size:13px;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;width:100%;}
+.edit-input:focus{outline:none;border-color:#7F77DD;}
+.edit-row .edit-input{flex:1;min-width:100px;}
+.save-btn{padding:7px 16px;border-radius:8px;border:none;background:#1D9E75;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.cancel-btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.section-divider{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--light);padding:10px 2px 4px;}
+.empty{text-align:center;padding:3rem;color:var(--light);font-size:14px;}
+.app-wrap{display:none;}
+.app-wrap.show{display:block;}
+
+@media(max-width:600px){.stats{grid-template-columns:repeat(3,1fr);}.form-grid{grid-template-columns:1fr;}.header{padding:12px 16px;}.main{padding:16px 12px;}.proj-progress-grid{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo"><i class="ti ti-chart-dots-3"></i></div>
+    <div class="login-title">TUES Office</div>
+    <div class="login-sub">Project Task Manager</div>
+    <div class="login-btns" id="loginBtns">
+      <button class="login-btn manager" onclick="showPin('manager')"><i class="ti ti-shield-lock"></i> Manager Login</button>
+      <button class="login-btn staff" onclick="showPin('staff')"><i class="ti ti-users"></i> Staff Login</button>
+    </div>
+    <div class="pin-form" id="pinForm">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:4px;" id="pinLabel">Enter your PIN</div>
+      <input type="password" class="pin-input" id="pinInput" maxlength="4" placeholder="••••" inputmode="numeric"/>
+      <button class="pin-submit" onclick="submitPin()">Enter</button>
+      <div class="pin-error" id="pinError">Incorrect PIN. Please try again.</div>
+      <button class="pin-back" onclick="backToLogin()">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app-wrap" id="appWrap">
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon"><i class="ti ti-chart-dots-3"></i></div>
+    TUES Office — <span>Project Task Manager</span>
+  </div>
+  <div id="roleBadge"></div>
+  <div id="syncIndicator" class="sync-indicator"></div>
+  <button class="logout-btn" onclick="logout()"><i class="ti ti-logout"></i> Log out</button>
+  <div class="tabs">
+    <button class="tab t-daily active" onclick="setView('daily')"><i class="ti ti-sun"></i> Daily</button>
+    <button class="tab t-monthly" onclick="setView('monthly')"><i class="ti ti-calendar"></i> Monthly</button>
+    <button class="tab t-annual" onclick="setView('annual')"><i class="ti ti-calendar-stats"></i> Annual</button>
+    <button class="tab t-all" onclick="setView('all')"><i class="ti ti-list"></i> All</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="stats" id="stats"></div>
+  <div class="proj-progress-grid" id="projProgressGrid"></div>
+  <div id="reminder"></div>
+
+  <div class="add-form" id="addFormSection">
+    <div class="add-form-title">
+      <div class="add-form-title-icon"><i class="ti ti-pencil-plus"></i></div>
+      New Task
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="manage-btn" onclick="openModal('projects')"><i class="ti ti-folder-plus"></i> Add Project</button>
+        <button class="manage-btn" onclick="openModal('staff')"><i class="ti ti-user-plus"></i> Add Staff</button>
+      </div>
+    </div>
+    <div class="form-grid">
+      <input type="text" id="nTitle" class="form-input" placeholder="Task description…" onkeydown="if(event.key==='Enter'){event.preventDefault();addTask();}"/>
+      <select id="nProj" class="form-input"></select>
+    </div>
+    <div class="form-row">
+      <select id="nFreq" class="form-input"><option value="daily">Daily</option><option value="monthly">Monthly</option><option value="annual">Annual</option></select>
+      <select id="nPerson" class="form-input"></select>
+      <input type="date" id="nDue" class="form-input"/>
+      <input type="time" id="nTime" class="form-input"/>
+      <button class="add-btn" onclick="addTask()"><i class="ti ti-plus"></i> Add Task</button>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <div class="filter-label">Filter by project</div>
+    <div class="chips" id="projChips"></div>
+  </div>
+  <div class="filter-section">
+    <div class="filter-label">Filter by team member</div>
+    <div class="chips" id="memberChips"></div>
+  </div>
+  <div class="task-list" id="taskList"></div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title"><span id="modalTitle">Manage</span><button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ===== CONFIG =====
+const MANAGER_PIN = '1717';
+const STAFF_PIN   = '4210';
+const JSONBIN_URL = 'https://api.jsonbin.io/v3/b';
+const JSONBIN_KEY = '$2a$10$PLACEHOLDER'; // will be set after JSONBin setup
+const SHARED_PROJECTS = ['NCUK Alvis Pathway','International Affairs','Accreditation'];
+const PALETTE = ['#E24B4A','#D4860B','#1D9E75','#378ADD','#7F77DD','#C0589E','#5BAD8F','#E07B39','#888780'];
+
+// ===== STATE =====
+let currentRole = null; // 'manager' | 'staff'
+let pinMode = null;
+let view='daily', activeProj='All', activeMember='All', nextId=122, editingId=null;
+let newProjColor=PALETTE[0], modalMode='projects';
+let binId = null; // JSONBin bin ID stored in localStorage
+
+let projects=[{"id": "p1", "name": "NCUK Alvis Pathway", "color": "#E24B4A", "bg": "#FFF0F0", "short": "NCUK", "icon": "ti-school", "shared": true}, {"id": "p2", "name": "International Affairs", "color": "#378ADD", "bg": "#EEF5FD", "short": "Intl", "icon": "ti-world", "shared": true}, {"id": "p4", "name": "UCLA Migration", "color": "#D4860B", "bg": "#FEF4E4", "short": "UCLA", "icon": "ti-map-pin", "shared": false}, {"id": "p5", "name": "IICAS Album", "color": "#7F77DD", "bg": "#F0EFFE", "short": "IICAS", "icon": "ti-book", "shared": false}, {"id": "p6", "name": "Private", "color": "#C0589E", "bg": "#FCEEF8", "short": "Priva", "icon": "ti-home", "shared": false}, {"id": "p1790570673707", "name": "Erasmus+", "color": "#378ADD", "bg": "rgba(55,138,221,0.12)", "short": "Erasm", "icon": "ti-certificate", "shared": true}, {"id": "p1790570846050", "name": "Dual Degree Programs", "color": "#E07B39", "bg": "rgba(224,123,57,0.12)", "short": "Dual", "icon": "ti-school", "shared": true}, {"id": "p1790570872674", "name": "International Professors", "color": "#E07B39", "bg": "rgba(224,123,57,0.12)", "short": "I.Prof", "icon": "ti-user-star", "shared": true}, {"id": "p1790570898658", "name": "International students", "color": "#5B8DD9", "bg": "rgba(91,141,217,0.12)", "short": "I.Std", "icon": "ti-users", "shared": true}, {"id": "p1790570910681", "name": "ASIIN", "color": "#5B8DD9", "bg": "rgba(91,141,217,0.12)", "short": "ASIIN", "icon": "ti-certificate", "shared": true}, {"id": "p1790570943146", "name": "A3ES", "color": "#E24B4A", "bg": "rgba(226,75,74,0.12)", "short": "A3ES", "icon": "ti-certificate", "shared": true}, {"id": "p1790570974193", "name": "Summer Schools", "color": "#E24B4A", "bg": "rgba(226,75,74,0.12)", "short": "Summe", "icon": "ti-sun", "shared": true}, {"id": "p1790571013257", "name": "Arranging Summer schools", "color": "#5BAD8F", "bg": "rgba(91,173,143,0.12)", "short": "Arr.S", "icon": "ti-calendar", "shared": true}, {"id": "p1790738366059", "name": "ACQUIN", "color": "#7F77DD", "bg": "rgba(127,119,221,0.12)", "short": "ACQUI", "icon": "ti-award", "shared": true}];
+let staff=["Me", "Denna", "Arslon", "Nodira", "Azimjon"];
+let tasks=[{"id": 22, "title": "Organize a meeting with UPI all Dual degree programs", "project": "Dual Degree Programs", "freq": "daily", "person": "Denna", "due": "2026-10-02", "time": "10:12", "done": true}, {"id": 23, "title": "Prepare the media and marketing plan", "project": "Dual Degree Programs", "freq": "daily", "person": "Denna", "due": "2026-09-30", "time": "16:20", "done": true}, {"id": 24, "title": "Finish the list of topics of Erasmus project", "project": "Erasmus+", "freq": "daily", "person": "Nodira", "due": "2026-10-07", "time": "11:00", "done": true}, {"id": 25, "title": "Send the docs of applicants to Shavkat aka", "project": "International Affairs", "freq": "daily", "person": "Arslon", "due": "2026-09-29", "time": "15:00", "done": true}, {"id": 26, "title": "Afghan students problem", "project": "International Affairs", "freq": "daily", "person": "Me", "due": "2026-10-02", "time": "09:00", "done": true}, {"id": 27, "title": "Send a letter to UCLA", "project": "UCLA Migration", "freq": "daily", "person": "Me", "due": "2026-09-30", "time": "10:00", "done": true}, {"id": 28, "title": "Make a list of partners for Farid", "project": "International Affairs", "freq": "daily", "person": "Arslon", "due": "2026-09-30", "time": "10:00", "done": true}, {"id": 29, "title": "Talk to Stephen and ask about involving international students and registration of school teachers as a master student in TUES", "project": "International Professors", "freq": "daily", "person": "Me", "due": "2026-10-02", "time": "16:00", "done": true}, {"id": 30, "title": "Arrange a Scopus subscription check my yandex mail", "project": "International Affairs", "freq": "daily", "person": "Me", "due": "2026-10-19", "time": "15:00", "done": true}, {"id": 31, "title": "Contact to korean university on cooperation", "project": "Dual Degree Programs", "freq": "daily", "person": "Denna", "due": "2026-10-12", "time": "16:00", "done": true}, {"id": 32, "title": "Contact to Malaysian university on cooperation", "project": "Dual Degree Programs", "freq": "daily", "person": "Denna", "due": "2026-10-13", "time": "11:00", "done": true}, {"id": 34, "title": "Send an agenda of NCUK to Dena", "project": "NCUK Alvis Pathway", "freq": "daily", "person": "Me", "due": "2026-09-30", "time": "10:40", "done": true}, {"id": 35, "title": "Prepare the list of tasks of preparation for NCUK open day", "project": "NCUK Alvis Pathway", "freq": "daily", "person": "Denna", "due": "2026-10-02", "time": "16:00", "done": true}, {"id": 36, "title": "Run recruitment NCUK for the next intake (25 students) in January", "project": "NCUK Alvis Pathway", "freq": "daily", "person": "Denna", "due": "2026-10-07", "time": "14:00", "done": true}, {"id": 37, "title": "Launch the social media campaign on Telegram and Instagram", "project": "Dual Degree Programs", "freq": "daily", "person": "Denna", "due": "2026-10-13", "time": "09:00", "done": true}, {"id": 38, "title": "Shoot a video", "project": "Dual Degree Programs", "freq": "daily", "person": "Denna", "due": "2026-10-22", "time": "14:00", "done": false}, {"id": 40, "title": "Find a student for farid to help with mails", "project": "International Affairs", "freq": "daily", "person": "Me", "due": "2026-09-30", "time": "", "done": true}, {"id": 41, "title": "Present the programmes to TUES students and school leavers", "project": "Dual Degree Programs", "freq": "daily", "person": "Denna", "due": "2026-10-09", "time": "15:00", "done": true}, {"id": 42, "title": "Hold online info sessions with UPI representatives", "project": "Dual Degree Programs", "freq": "daily", "person": "Denna", "due": "2026-10-07", "time": "09:00", "done": true}, {"id": 43, "title": "Build a database of funders (Spencer, JICA, KOICA and others)", "project": "Erasmus+", "freq": "daily", "person": "Denna", "due": "2026-10-19", "time": "11:32", "done": true}, {"id": 44, "title": "Make list of the teachers who can work with projects", "project": "Erasmus+", "freq": "daily", "person": "Nodira", "due": "2026-10-19", "time": "10:00", "done": false}, {"id": 45, "title": "Organize seminars for departments on Erasmus foundation: 1. make a plan of seminars for each department", "project": "Erasmus+", "freq": "daily", "person": "Nodira", "due": "2026-10-16", "time": "11:00", "done": false}, {"id": 46, "title": "Prepare documents and leading questions for ASIIN and send them to the group", "project": "Erasmus+", "freq": "daily", "person": "Me", "due": "2026-10-12", "time": "10:00", "done": true}, {"id": 47, "title": "Analyze all necessary documents of ASIIN send it to Azim", "project": "ASIIN", "freq": "daily", "person": "Me", "due": "2026-10-07", "time": "14:15", "done": true}, {"id": 48, "title": "Check if all the departments submitted all necessary documents", "project": "ASIIN", "freq": "daily", "person": "Azimjon", "due": "2026-10-07", "time": "10:00", "done": true}, {"id": 49, "title": "Work individually with professors on drafts and partner search", "project": "Erasmus+", "freq": "daily", "person": "Nodira", "due": "2026-10-22", "time": "09:00", "done": false}, {"id": 50, "title": "Make a seminar on ASIIN", "project": "ASIIN", "freq": "daily", "person": "Me", "due": "2026-10-15", "time": "14:00", "done": true}, {"id": 51, "title": "Analize all the documents of ASIIN+A3ES and write a letter to both of them", "project": "A3ES", "freq": "daily", "person": "Azimjon", "due": "2026-10-06", "time": "09:00", "done": true}, {"id": 52, "title": "tidy up all rooms", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-09-30", "time": "18:30", "done": true}, {"id": 53, "title": "iron the clothes", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-09-30", "time": "18:00", "done": true}, {"id": 54, "title": "write an application for getting a extra work", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-09-30", "time": "09:00", "done": true}, {"id": 55, "title": "ask if all docs of Dena is ok in HR", "project": "International Affairs", "freq": "daily", "person": "Me", "due": "2026-09-30", "time": "11:50", "done": true}, {"id": 56, "title": "Clean the guests room and whole house", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-03", "time": "10:00", "done": true}, {"id": 57, "title": "Have my nails done", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-03", "time": "17:00", "done": true}, {"id": 58, "title": "have my hair dyed", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-04", "time": "11:00", "done": true}, {"id": 59, "title": "Finish up Dilnoza's work chapter 2", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-24", "time": "16:00", "done": false}, {"id": 60, "title": "Get my clothes trimmed", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-05", "time": "18:00", "done": true}, {"id": 61, "title": "Get my jacket upcycled", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-18", "time": "19:00", "done": true}, {"id": 62, "title": "Fill in the agenda for Janine", "project": "ACQUIN", "freq": "daily", "person": "Me", "due": "2026-10-02", "time": "16:30", "done": true}, {"id": 63, "title": "Check study in Uzbekistan", "project": "International students", "freq": "daily", "person": "Nodira", "due": "2026-10-05", "time": "10:00", "done": true}, {"id": 64, "title": "Tell Baxtiyor to do the PPT and helping Farid with e-mails", "project": "International students", "freq": "daily", "person": "Denna", "due": "2026-09-30", "time": "11:35", "done": true}, {"id": 65, "title": "meeting with UPI", "project": "Dual Degree Programs", "freq": "daily", "person": "Me", "due": "2026-10-02", "time": "11:30", "done": true}, {"id": 66, "title": "Meeting with International teacher", "project": "International Professors", "freq": "daily", "person": "Me", "due": "2026-10-02", "time": "15:30", "done": true}, {"id": 67, "title": "Have an IELTS lesson", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-02", "time": "14:00", "done": true}, {"id": 68, "title": "Gather all contacts of our partners", "project": "International Affairs", "freq": "daily", "person": "Denna", "due": "2026-10-02", "time": "12:00", "done": true}, {"id": 69, "title": "Go to the OVIR", "project": "International Professors", "freq": "daily", "person": "Arslon", "due": "2026-10-02", "time": "10:00", "done": true}, {"id": 70, "title": "Prepare the docs of Tajik professors", "project": "International Professors", "freq": "daily", "person": "Arslon", "due": "2026-10-05", "time": "14:00", "done": true}, {"id": 71, "title": "Register Denna for working lisence", "project": "International Professors", "freq": "daily", "person": "Arslon", "due": "2026-10-05", "time": "14:00", "done": true}, {"id": 72, "title": "make a new list international professors", "project": "International Professors", "freq": "daily", "person": "Arslon", "due": "2026-10-14", "time": "14:00", "done": false}, {"id": 73, "title": "Prepare the PPT for international partners", "project": "International Affairs", "freq": "daily", "person": "Azimjon", "due": "2026-10-08", "time": "16:00", "done": true}, {"id": 74, "title": "Send Janine photos and participant list", "project": "ACQUIN", "freq": "daily", "person": "Me", "due": "2026-10-06", "time": "15:00", "done": true}, {"id": 75, "title": "Meet with dual degree program applicants", "project": "Dual Degree Programs", "freq": "daily", "person": "Me", "due": "2026-10-05", "time": "15:00", "done": true}, {"id": 76, "title": "Meeting with Luke", "project": "NCUK Alvis Pathway", "freq": "daily", "person": "Me", "due": "2026-10-05", "time": "16:30", "done": true}, {"id": 77, "title": "Call the girl who wants to enter the Dual degree program", "project": "Dual Degree Programs", "freq": "daily", "person": "Me", "due": "2026-10-06", "time": "09:30", "done": true}, {"id": 78, "title": "Ask Gulnigor about the salary and the Khayot", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-06", "time": "11:00", "done": true}, {"id": 79, "title": "Cook weekly meal", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-06", "time": "05:10", "done": true}, {"id": 80, "title": "Create questions for each direction", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-08", "time": "14:00", "done": true}, {"id": 81, "title": "Check the marketing plan of dual degree program and add it to my plan", "project": "Private", "freq": "daily", "person": "Me", "due": null, "time": "", "done": true}, {"id": 82, "title": "Send a participant list, agenda and photos to Janine", "project": "ACQUIN", "freq": "daily", "person": "Me", "due": "2026-10-07", "time": "16:00", "done": true}, {"id": 83, "title": "Register Denna for Visa", "project": "International Professors", "freq": "daily", "person": "Arslon", "due": "2026-10-07", "time": "15:27", "done": true}, {"id": 85, "title": "ASIIN report + seminar plan", "project": "ASIIN", "freq": "daily", "person": "Azimjon", "due": "2026-10-08", "time": "15:30", "done": true}, {"id": 86, "title": "A3ES report + seminar plan", "project": "A3ES", "freq": "daily", "person": "Azimjon", "due": "2026-10-14", "time": "08:00", "done": false}, {"id": 87, "title": "make a list of foreign students", "project": "International students", "freq": "daily", "person": "Arslon", "due": "2026-10-14", "time": "14:00", "done": false}, {"id": 88, "title": "Get the documents of Dual degree students from admission department", "project": "Dual Degree Programs", "freq": "daily", "person": "Azimjon", "due": "2026-10-07", "time": "14:00", "done": true}, {"id": 90, "title": "Tell Feruza about forwarding", "project": "International Affairs", "freq": "daily", "person": "Me", "due": "2026-10-07", "time": "14:00", "done": true}, {"id": 91, "title": "Look through Denna's plans", "project": "International Affairs", "freq": "daily", "person": "Me", "due": "2026-10-07", "time": "15:00", "done": true}, {"id": 92, "title": "Send a participant list, agenda and photos to Janine", "project": "ACQUIN", "freq": "daily", "person": "Me", "due": "2026-10-08", "time": "14:00", "done": true}, {"id": 93, "title": "Make a plan of arrangements and agenda of open day send it to Ale", "project": "NCUK Alvis Pathway", "freq": "daily", "person": "Me", "due": "2026-10-08", "time": "15:00", "done": true}, {"id": 94, "title": "Get all clothes for trimming to the tailor", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-09", "time": "11:30", "done": true}, {"id": 95, "title": "Call the head of departments to appoint people for NCUK", "project": "NCUK Alvis Pathway", "freq": "daily", "person": "Me", "due": "2026-10-09", "time": "14:00", "done": true}, {"id": 96, "title": "Fill in the requirements for attestation", "project": "International Affairs", "freq": "daily", "person": "Me", "due": "2026-10-08", "time": "18:00", "done": true}, {"id": 97, "title": "Set a meeting with departments and leadership", "project": "ACQUIN", "freq": "daily", "person": "Me", "due": "2026-10-08", "time": "14:00", "done": true}, {"id": 98, "title": "Meeting with Oysuluv and Laziz", "project": "NCUK Alvis Pathway", "freq": "daily", "person": "Me", "due": "2026-10-09", "time": "14:00", "done": true}, {"id": 99, "title": "Make list of project topics in Medicine", "project": "Erasmus+", "freq": "daily", "person": "Nodira", "due": "2026-10-16", "time": "15:00", "done": false}, {"id": 100, "title": "ASIIN report + seminar plan", "project": "ASIIN", "freq": "daily", "person": "Azimjon", "due": "2026-10-14", "time": "09:00", "done": true}, {"id": 101, "title": "Prepare SARs in Uzbek", "project": "ACQUIN", "freq": "daily", "person": "Me", "due": "2026-10-12", "time": "16:00", "done": true}, {"id": 102, "title": "The list of participants for conversation", "project": "ACQUIN", "freq": "daily", "person": "Me", "due": "2026-10-21", "time": "16:00", "done": true}, {"id": 103, "title": "Talk to Level up, Emperial, Winners about the visit", "project": "NCUK Alvis Pathway", "freq": "daily", "person": "Me", "due": "2026-10-12", "time": "18:00", "done": true}, {"id": 104, "title": "Check everything for the Open Day", "project": "NCUK Alvis Pathway", "freq": "daily", "person": "Me", "due": "2026-10-12", "time": "19:00", "done": true}, {"id": 105, "title": "Discuss the SAR issues with Sobir", "project": "ACQUIN", "freq": "daily", "person": "Me", "due": null, "time": "18:16", "done": true}, {"id": 106, "title": "Talk to Shaxista opa about Dilnoza", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-19", "time": "09:00", "done": true}, {"id": 108, "title": "Send the Uzbek SARS to the group", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-14", "time": "08:00", "done": true}, {"id": 109, "title": "Order all the things in my list", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-20", "time": "20:00", "done": false}, {"id": 110, "title": "Get my house cleaned", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-17", "time": "10:30", "done": true}, {"id": 111, "title": "Get all my clothes ironed", "project": "Private", "freq": "daily", "person": "Me", "due": "2026-10-21", "time": "11:31", "done": false}, {"id": 112, "title": "Appoint someone to work with NCUK", "project": "NCUK Alvis Pathway", "freq": "daily", "person": "Denna", "due": "2026-10-20", "time": "10:00", "done": false}, {"id": 113, "title": "make a plan on the task to be done on ACQUN visit", "project": "ACQUIN", "freq": "daily", "person": "Me", "due": "2026-10-19", "time": "10:00", "done": true}, {"id": 114, "title": "Get the flowers from post office and visit my mom", "project": "ACQUIN", "freq": "daily", "person": "Me", "due": "2026-10-19", "time": "12:59", "done": true}, {"id": 115, "title": "Shoot a video", "project": "Dual Degree Programs", "freq": "daily", "person": "Me", "due": null, "time": "15:00", "done": true}, {"id": 116, "title": "Overview for Sardor about data migration", "project": "NCUK Alvis Pathway", "freq": "daily", "person": "Me", "due": "2026-10-20", "time": "09:00", "done": true}, {"id": 117, "title": "Write Sam this week", "project": "NCUK Alvis Pathway", "freq": "daily", "person": "Me", "due": "2026-10-23", "time": "14:00", "done": false}, {"id": 118, "title": "Send the participant list to Janine", "project": "NCUK Alvis Pathway", "freq": "daily", "person": "Me", "due": "2026-10-20", "time": "10:00", "done": false}, {"id": 119, "title": "Check the preparations of the rooms", "project": "ACQUIN", "freq": "daily", "person": "Azimjon", "due": "2026-10-21", "time": "10:02", "done": false}, {"id": 120, "title": "talk to Farid and organize the seminars on how to find international conferences and trainings for Staff and students", "project": "International Affairs", "freq": "daily", "person": "Denna", "due": "2026-10-21", "time": "15:05", "done": false}, {"id": 121, "title": "talk to UPI on the sending the students to indonesia", "project": "Dual Degree Programs", "freq": "daily", "person": "Denna", "due": "2026-10-21", "time": "10:07", "done": false}];
+
+// ===== JSONBIN SYNC =====
+const JB_MASTER_KEY = '$2a$10$zUKN.LG02bamQmonVzdKM.P/Mr0zHmm5R1uSxApcQDBVwVLpuqusu';
+
+async function jbSave(){
+  setSyncStatus('syncing');
+  try{
+    const payload = {tasks,projects,staff,nextId};
+    let id = localStorage.getItem('tues_bin_id');
+    if(!id){
+      // Create new bin
+      const res = await fetch('https://api.jsonbin.io/v3/b',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Master-Key':JB_MASTER_KEY,'X-Bin-Name':'tues-office','X-Bin-Private':'false'},
+        body:JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if(data.metadata && data.metadata.id){
+        id = data.metadata.id;
+        localStorage.setItem('tues_bin_id', id);
+      } else throw new Error('Bin creation failed');
+    } else {
+      await fetch(`https://api.jsonbin.io/v3/b/${id}`,{
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-Master-Key':JB_MASTER_KEY},
+        body:JSON.stringify(payload)
+      });
+    }
+    localStorage.setItem('tues_tasks',JSON.stringify(tasks));
+    localStorage.setItem('tues_projects',JSON.stringify(projects));
+    localStorage.setItem('tues_staff',JSON.stringify(staff));
+    localStorage.setItem('tues_nextId',String(nextId));
+    setSyncStatus('synced');
+  }catch(e){
+    console.error('Save failed',e);
+    localStorage.setItem('tues_tasks',JSON.stringify(tasks));
+    setSyncStatus('error');
+  }
+}
+
+async function jbLoad(){
+  setSyncStatus('syncing');
+  try{
+    let id = localStorage.getItem('tues_bin_id');
+    if(!id){
+      // Try to find existing bin by listing
+      const res = await fetch('https://api.jsonbin.io/v3/b?sortBy=createdAt&order=desc',{
+        headers:{'X-Master-Key':JB_MASTER_KEY}
+      });
+      const data = await res.json();
+      if(data && Array.isArray(data) && data.length > 0){
+        const found = data.find(b=>b.record && b.record.name==='tues-office') || data[0];
+        if(found && found.id){ id=found.id; localStorage.setItem('tues_bin_id',id); }
+      }
+    }
+    if(id){
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${id}/latest`,{
+        headers:{'X-Master-Key':JB_MASTER_KEY}
+      });
+      const data = await res.json();
+      if(data && data.record){
+        const r = data.record;
+        if(r.tasks && r.tasks.length) tasks=r.tasks;
+        if(r.projects && r.projects.length) projects=r.projects;
+        if(r.staff && r.staff.length) staff=r.staff;
+        if(r.nextId) nextId=r.nextId;
+        setSyncStatus('synced');
+        return;
+      }
+    }
+    // No cloud data — use local or defaults, then push to cloud
+    loadLocalFallback();
+    await jbSave();
+    setSyncStatus('synced');
+  }catch(e){
+    console.error('Load failed',e);
+    loadLocalFallback();
+    setSyncStatus('error');
+  }
+}
+
+function loadLocalFallback(){
+  try{
+    const t=localStorage.getItem('tues_tasks'); if(t){const p=JSON.parse(t);if(p.length)tasks=p;}
+    const p=localStorage.getItem('tues_projects'); if(p){const q=JSON.parse(p);if(q.length)projects=q;}
+    const s=localStorage.getItem('tues_staff'); if(s){const q=JSON.parse(s);if(q.length)staff=q;}
+    nextId=parseInt(localStorage.getItem('tues_nextId')||String(nextId));
+  }catch(e){}
+}
+
+function setSyncStatus(s){
+  const el=document.getElementById('syncIndicator'); if(!el)return;
+  const m={syncing:{i:'ti-cloud-upload',c:'#378ADD',t:'Syncing…'},synced:{i:'ti-cloud-check',c:'#1D9E75',t:'Synced ✓'},error:{i:'ti-cloud-off',c:'#A32D2D',t:'Offline'}};
+  const x=m[s]||m.synced;
+  el.innerHTML=`<i class="ti ${x.i}" style="color:${x.c};"></i><span style="color:${x.c};font-size:12px;">${x.t}</span>`;
+}
+
+// Poll every 20s for updates from other devices
+setInterval(async()=>{
+  if(!currentRole||editingId)return;
+  try{
+    const id=localStorage.getItem('tues_bin_id'); if(!id)return;
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${id}/latest`,{headers:{'X-Master-Key':JB_MASTER_KEY}});
+    const data=await res.json();
+    if(data&&data.record&&data.record.tasks){
+      tasks=data.record.tasks; projects=data.record.projects||projects; staff=data.record.staff||staff; nextId=data.record.nextId||nextId;
+      render(); setSyncStatus('synced');
+    }
+  }catch(e){}
+},20000);
+
+// ===== PIN LOGIN =====
+function showPin(mode){
+  pinMode=mode;
+  document.getElementById('loginBtns').style.display='none';
+  document.getElementById('pinForm').classList.add('show');
+  document.getElementById('pinLabel').textContent = mode==='manager'?'Enter manager PIN':'Enter staff PIN';
+  document.getElementById('pinInput').value='';
+  document.getElementById('pinError').classList.remove('show');
+  document.getElementById('pinInput').focus();
+}
+function backToLogin(){
+  document.getElementById('loginBtns').style.display='flex';
+  document.getElementById('pinForm').classList.remove('show');
+}
+function submitPin(){
+  const val=document.getElementById('pinInput').value.trim();
+  if(pinMode==='manager'&&val===MANAGER_PIN){ loginAs('manager'); return; }
+  if(pinMode==='staff'&&val===STAFF_PIN){ loginAs('staff'); return; }
+  document.getElementById('pinError').classList.add('show');
+  document.getElementById('pinInput').value='';
+  document.getElementById('pinInput').focus();
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&pinMode)submitPin();});
+
+async function loginAs(role){
+  currentRole=role;
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('appWrap').classList.add('show');
+  const rb=document.getElementById('roleBadge');
+  if(role==='manager') rb.innerHTML='<span class="role-badge role-manager"><i class="ti ti-shield"></i> Manager</span>';
+  else rb.innerHTML='<span class="role-badge role-staff"><i class="ti ti-user"></i> Staff</span>';
+  // Hide add form for staff
+  if(role==='staff') document.getElementById('addFormSection').style.display='none';
+  document.getElementById('nDue').min=new Date().toISOString().split('T')[0];
+  await jbLoad();
+  populateFormDropdowns();
+  render();
+}
+
+function logout(){
+  currentRole=null; pinMode=null;
+  document.getElementById('loginWrap').style.display='flex';
+  document.getElementById('appWrap').classList.remove('show');
+  document.getElementById('loginBtns').style.display='flex';
+  document.getElementById('pinForm').classList.remove('show');
+}
+
+// ===== HELPERS =====
+function visibleProjects(){
+  if(currentRole==='manager') return projects;
+  return projects.filter(p=>p.shared!==false);
+}
+function getProjByName(name){return projects.find(p=>p.name===name)||{color:'#888',bg:'#eee',short:(name||'?').substring(0,5),icon:'ti-folder'};}
+function hexToBg(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`rgba(${r},${g},${b},0.12)`;}
+const today=new Date(); today.setHours(0,0,0,0);
+
+function dueInfo(due){
+  if(!due)return null;
+  const d=new Date(due);d.setHours(0,0,0,0);
+  const diff=Math.floor((d-today)/86400000);
+  if(diff<0)return{label:`Overdue by ${-diff}d`,cls:'due-over'};
+  if(diff===0)return{label:'Due today!',cls:'due-soon'};
+  if(diff<=3)return{label:`Due in ${diff}d`,cls:'due-soon'};
+  return{label:`Due ${due}`,cls:'due-ok'};
+}
+function fmt12(t){if(!t)return'';const[h,m]=t.split(':').map(Number);const ap=h>=12?'PM':'AM';return`${h%12||12}:${String(m).padStart(2,'0')} ${ap}`;}
+
+function setView(v){
+  view=v;
+  ['daily','monthly','annual','all'].forEach((x,i)=>document.querySelectorAll('.tab')[i].classList.toggle('active',x===v));
+  render();
+}
+
+// ===== TASK ACTIONS =====
+function addTask(){
+  if(currentRole!=='manager')return;
+  const title=document.getElementById('nTitle').value.trim(); if(!title){document.getElementById('nTitle').focus();return;}
+  const project=document.getElementById('nProj').value||projects[0]?.name;
+  const freq=document.getElementById('nFreq').value;
+  const person=document.getElementById('nPerson').value||staff[0];
+  const due=document.getElementById('nDue').value||null;
+  const time=document.getElementById('nTime').value||'';
+  tasks.push({id:nextId++,title,project,freq,person,due,time,done:false});
+  document.getElementById('nTitle').value=''; document.getElementById('nDue').value=''; document.getElementById('nTime').value='';
+  document.getElementById('nTitle').focus();
+  jbSave(); render();
+}
+function toggleDone(id){const t=tasks.find(x=>x.id===id);if(t){t.done=!t.done;jbSave();render();}}
+function deleteTask(id){if(currentRole!=='manager')return;if(confirm('Delete this task?')){tasks=tasks.filter(x=>x.id!==id);jbSave();render();}}
+function toggleEdit(id){if(currentRole!=='manager')return;editingId=editingId===id?null:id;render();}
+function saveEdit(id){
+  if(currentRole!=='manager')return;
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  const nt=document.getElementById('et_title_'+id).value.trim(); if(nt)t.title=nt;
+  t.project=document.getElementById('et_proj_'+id).value;
+  t.freq=document.getElementById('et_freq_'+id).value;
+  t.person=document.getElementById('et_person_'+id).value;
+  t.due=document.getElementById('et_due_'+id).value||null;
+  t.time=document.getElementById('et_time_'+id).value||'';
+  editingId=null; jbSave(); render();
+}
+
+// ===== RENDER =====
+function populateFormDropdowns(){
+  document.getElementById('nProj').innerHTML='<option value="">Select project…</option>'+projects.map(p=>`<option value="${p.name}">${p.shared===false?'🔒 ':''} ${p.name}</option>`).join('');
+  document.getElementById('nPerson').innerHTML=staff.map(s=>`<option value="${s}">${s}</option>`).join('');
+}
+
+function getProjectStats(projName){
+  const src=view==='all'?tasks:tasks.filter(t=>t.freq===view);
+  const pt=src.filter(t=>t.project===projName);
+  const total=pt.length,done=pt.filter(t=>t.done).length;
+  const over=pt.filter(t=>!t.done&&t.due&&new Date(t.due).setHours(0,0,0,0)<today).length;
+  return{total,done,remaining:total-done,over,pct:total?Math.round(done/total*100):0};
+}
+
+function renderStats(){
+  const vp=visibleProjects().map(p=>p.name);
+  const src=(view==='all'?tasks:tasks.filter(t=>t.freq===view)).filter(t=>vp.includes(t.project));
+  const total=src.length,done=src.filter(t=>t.done).length;
+  const over=src.filter(t=>!t.done&&t.due&&new Date(t.due).setHours(0,0,0,0)<today).length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('stats').innerHTML=`
+    <div class="stat s-purple"><div class="stat-label">Total</div><div class="stat-val">${total}</div></div>
+    <div class="stat s-teal"><div class="stat-label">Done</div><div class="stat-val">${done}</div></div>
+    <div class="stat s-blue"><div class="stat-label">Remaining</div><div class="stat-val">${total-done}</div></div>
+    <div class="stat s-red"><div class="stat-label">Overdue</div><div class="stat-val">${over}</div></div>
+    <div class="stat s-amber"><div class="stat-label">Progress</div><div class="stat-val">${pct}%</div></div>`;
+}
+
+function renderProjectProgress(){
+  document.getElementById('projProgressGrid').innerHTML=visibleProjects().map(p=>{
+    const s=getProjectStats(p.name);
+    return`<div class="proj-card" style="border-top-color:${p.color};">
+      <div class="pc-header">
+        <div class="pc-icon" style="background:${p.color};"><i class="ti ${p.icon||'ti-folder'}"></i></div>
+        <div><div class="pc-name">${p.name}${p.shared===false?` <span style="font-size:10px;color:var(--light);">🔒</span>`:''}</div><div class="pc-short">${s.total} task${s.total!==1?'s':''}</div></div>
+      </div>
+      <div class="pc-counts">
+        <div class="pc-count"><div class="pc-count-val" style="color:${p.color};">${s.done}</div><div class="pc-count-label">Done</div></div>
+        <div class="pc-count"><div class="pc-count-val">${s.remaining}</div><div class="pc-count-label">Left</div></div>
+        <div class="pc-count"><div class="pc-count-val" style="color:${s.over>0?'#A32D2D':'var(--light)'};">${s.over}</div><div class="pc-count-label">Overdue</div></div>
+      </div>
+      <div class="pc-bar-wrap"><div class="pc-bar" style="width:${s.pct}%;background:${s.pct===100?'#1D9E75':p.color};"></div></div>
+      <div class="pc-pct" style="color:${p.color};">${s.pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function renderReminder(){
+  const vp=visibleProjects().map(p=>p.name);
+  const urgent=tasks.filter(t=>{
+    if(t.done||!t.due||!vp.includes(t.project))return false;
+    return Math.floor((new Date(t.due).setHours(0,0,0,0)-today)/86400000)<=2;
+  });
+  const el=document.getElementById('reminder');
+  if(!urgent.length){el.innerHTML='';return;}
+  el.innerHTML=`<div class="reminder"><div class="rem-title"><i class="ti ti-bell" style="margin-right:6px;"></i>${urgent.length} task${urgent.length>1?'s':''} need urgent attention</div>
+    ${urgent.map(t=>{const col=getProjByName(t.project).color;const ts=t.time?` at ${fmt12(t.time)}`:'';return`<div class="rem-item"><span style="color:${col};font-weight:600;">${t.title}</span><span style="color:#aaa;font-size:11px;margin-left:4px;">— ${t.project}${ts}</span></div>`;}).join('')}
+  </div>`;
+}
+
+function renderFilters(){
+  const vp=visibleProjects();
+  document.getElementById('projChips').innerHTML=
+    ['All',...vp.map(p=>p.name)].map(name=>{
+      const active=activeProj===name;
+      const p=getProjByName(name);
+      const style=active&&name!=='All'?`background:${p.bg};color:${p.color};border-color:${p.color};`:active?'background:#F0EFFE;color:#3C3489;border-color:#7F77DD;':'';
+      return`<button class="chip" data-proj="${name.replace(/"/g,'&quot;')}" onclick="setProj(this.dataset.proj)" style="${style}">${name==='All'?'🗂 All':name}</button>`;
+    }).join('');
+  document.getElementById('memberChips').innerHTML=
+    ['All',...staff].map(m=>{
+      const active=activeMember===m;
+      const style=active?'background:#F0EFFE;color:#3C3489;border-color:#7F77DD;':'';
+      return`<button class="chip" onclick="setMember('${m}')" style="${style}">${m==='All'?'👥 Everyone':m}</button>`;
+    }).join('');
+}
+
+function setProj(p){activeProj=p;render();}
+function setMember(m){activeMember=m;render();}
+
+function renderTasks(){
+  const vp=visibleProjects().map(p=>p.name);
+  let list=(view==='all'?[...tasks]:tasks.filter(t=>t.freq===view)).filter(t=>vp.includes(t.project));
+  if(activeProj!=='All')list=list.filter(t=>t.project===activeProj);
+  if(activeMember!=='All')list=list.filter(t=>t.person===activeMember);
+  const pending=list.filter(t=>!t.done).sort((a,b)=>{
+    const da=a.due?new Date(a.due).getTime():9e12,db=b.due?new Date(b.due).getTime():9e12;
+    if(da!==db)return da-db;
+    if(a.time&&b.time)return a.time.localeCompare(b.time);
+    return a.time?-1:b.time?1:0;
+  });
+  const done=list.filter(t=>t.done);
+  const all=[...pending,...done];
+  if(!all.length){document.getElementById('taskList').innerHTML='<div class="empty"><i class="ti ti-mood-happy" style="font-size:32px;display:block;margin-bottom:10px;"></i>No tasks here!</div>';return;}
+  const isManager=currentRole==='manager';
+  document.getElementById('taskList').innerHTML=all.map((t,i)=>{
+    const p=getProjByName(t.project);
+    const di=dueInfo(t.due);
+    const isEditing=editingId===t.id;
+    const projOpts=projects.map(pr=>`<option value="${pr.name}"${t.project===pr.name?' selected':''}>${pr.name}</option>`).join('');
+    const staffOpts=staff.map(s=>`<option value="${s}"${t.person===s?' selected':''}>${s}</option>`).join('');
+    const timeBadge=t.time?`<span class="badge b-time"><i class="ti ti-clock" style="font-size:10px;vertical-align:-1px;margin-right:2px;"></i>${fmt12(t.time)}</span>`:'';
+    const divider=(i===pending.length&&done.length>0&&pending.length>0)?`<div class="section-divider">✓ Completed</div>`:'';
+    return divider+`<div class="task-card ${t.done?'done':''}" style="border-left-color:${p.color};">
+      <div class="task-main">
+        <input type="checkbox" ${t.done?'checked':''} onchange="toggleDone(${t.id})"/>
+        <div class="task-info">
+          <div class="task-title">${t.title}</div>
+          <div class="task-meta">
+            <span class="badge b-${t.freq}">${t.freq}</span>
+            <span class="badge" style="background:${p.bg};color:${p.color};">${p.short}</span>
+            ${t.person?`<span class="badge b-person"><i class="ti ti-user" style="font-size:10px;vertical-align:-1px;margin-right:2px;"></i>${t.person}</span>`:''}
+            ${timeBadge}
+            ${di?`<span class="${di.cls}"><i class="ti ti-calendar" style="font-size:11px;vertical-align:-1px;margin-right:2px;"></i>${di.label}</span>`:''}
+          </div>
+        </div>
+        <div class="task-btns">
+          ${isManager?`<button class="icon-btn" onclick="toggleEdit(${t.id})"><i class="ti ti-pencil"></i></button><button class="icon-btn del" onclick="deleteTask(${t.id})"><i class="ti ti-trash"></i></button>`:''}
+        </div>
+      </div>
+      ${isManager?`<div class="edit-panel ${isEditing?'open':''}">
+        <div class="edit-grid"><input class="edit-input" id="et_title_${t.id}" value="${t.title.replace(/"/g,'&quot;')}"/><select class="edit-input" id="et_proj_${t.id}">${projOpts}</select></div>
+        <div class="edit-row"><select class="edit-input" id="et_freq_${t.id}"><option value="daily"${t.freq==='daily'?' selected':''}>Daily</option><option value="monthly"${t.freq==='monthly'?' selected':''}>Monthly</option><option value="annual"${t.freq==='annual'?' selected':''}>Annual</option></select><select class="edit-input" id="et_person_${t.id}">${staffOpts}</select></div>
+        <div class="edit-row"><input type="date" class="edit-input" id="et_due_${t.id}" value="${t.due||''}"/><input type="time" class="edit-input" id="et_time_${t.id}" value="${t.time||''}"/></div>
+        <div style="display:flex;gap:8px;"><button class="save-btn" onclick="saveEdit(${t.id})"><i class="ti ti-check"></i> Save</button><button class="cancel-btn" onclick="toggleEdit(${t.id})">Cancel</button></div>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ===== MODAL =====
+function openModal(mode){if(currentRole!=='manager')return;modalMode=mode;newProjColor=PALETTE[0];document.getElementById('modalTitle').textContent=mode==='projects'?'Manage Projects':'Manage Staff';renderModalBody();document.getElementById('modalOverlay').classList.add('open');}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+function closeModalOutside(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
+
+function renderModalBody(){
+  if(modalMode==='projects'){
+    const swatches=PALETTE.map(c=>`<div class="color-swatch ${c===newProjColor?'selected':''}" style="background:${c};" onclick="selectColor('${c}')"></div>`).join('');
+    const list=projects.map(p=>`<div class="modal-list-item">
+      <div class="modal-list-item-dot" style="background:${p.color};"></div>
+      <div class="modal-list-item-name">${p.name} ${p.shared===false?'🔒':''}</div>
+      <select onchange="toggleProjVisibility('${p.id}',this.value)" style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:2px 6px;background:var(--bg);font-family:'DM Sans',sans-serif;">
+        <option value="shared" ${p.shared!==false?'selected':''}>👥 Shared</option>
+        <option value="private" ${p.shared===false?'selected':''}>🔒 Private</option>
+      </select>
+      <button class="modal-list-item-del" onclick="deleteProject('${p.id}')"><i class="ti ti-trash"></i></button>
+    </div>`).join('');
+    document.getElementById('modalBody').innerHTML=`
+      <div class="modal-section"><div class="modal-section-title">Current projects (set visibility)</div><div class="modal-list">${list}</div></div>
+      <div class="modal-section"><div class="modal-section-title">Add new project</div>
+        <div class="color-picker">${swatches}</div>
+        <div class="modal-add-row" style="margin-bottom:8px;">
+          <input type="text" id="newProjName" placeholder="Project name…" onkeydown="if(event.key==='Enter')addProject()"/>
+          <select id="newProjVis" style="flex:0;min-width:100px;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;background:var(--bg);font-family:'DM Sans',sans-serif;">
+            <option value="shared">👥 Shared</option><option value="private">🔒 Private</option>
+          </select>
+          <button class="mini-add-btn" onclick="addProject()"><i class="ti ti-plus"></i></button>
+        </div>
+      </div>`;
+  } else {
+    const list=staff.map((s,i)=>`<div class="modal-list-item"><div class="modal-list-item-dot" style="background:#7F77DD;"></div><div class="modal-list-item-name">${s}</div>${s!=='Me'?`<button class="modal-list-item-del" onclick="deleteStaff(${i})"><i class="ti ti-trash"></i></button>`:'<span style="font-size:11px;color:var(--light);">owner</span>'}</div>`).join('');
+    document.getElementById('modalBody').innerHTML=`<div class="modal-section"><div class="modal-section-title">Team members</div><div class="modal-list">${list}</div></div><div class="modal-section"><div class="modal-section-title">Add new staff member</div><div class="modal-add-row"><input type="text" id="newStaffName" placeholder="Full name…" onkeydown="if(event.key==='Enter')addStaff()"/><button class="mini-add-btn" onclick="addStaff()"><i class="ti ti-plus"></i> Add</button></div></div>`;
+  }
+}
+
+function selectColor(c){newProjColor=c;renderModalBody();}
+function toggleProjVisibility(id,val){const p=projects.find(x=>x.id===id);if(p){p.shared=val==='shared';jbSave();renderModalBody();render();}}
+function addProject(){
+  const name=document.getElementById('newProjName').value.trim(); if(!name)return;
+  if(projects.find(p=>p.name===name)){alert('Already exists!');return;}
+  const shared=document.getElementById('newProjVis').value==='shared';
+  projects.push({id:'p'+Date.now(),name,color:newProjColor,bg:hexToBg(newProjColor),short:name.substring(0,5),icon:'ti-folder',shared});
+  jbSave();populateFormDropdowns();renderModalBody();render();
+}
+function deleteProject(id){if(!confirm('Delete project?'))return;projects=projects.filter(p=>p.id!==id);jbSave();populateFormDropdowns();renderModalBody();render();}
+function addStaff(){const name=document.getElementById('newStaffName').value.trim();if(!name)return;if(staff.includes(name)){alert('Already exists!');return;}staff.push(name);jbSave();populateFormDropdowns();renderModalBody();render();}
+function deleteStaff(i){if(!confirm('Remove staff?'))return;staff.splice(i,1);jbSave();populateFormDropdowns();renderModalBody();render();}
+
+function render(){if(!currentRole)return;renderStats();renderProjectProgress();renderReminder();renderFilters();renderTasks();}
+</script>
+</body>
+</html>
